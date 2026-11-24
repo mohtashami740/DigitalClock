@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -95,6 +96,30 @@ class ScreenshotTest {
             }
         }
         shot("segment_digits")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun slantComparison() {
+        rule.mainClock.autoAdvance = false
+        val white = androidx.compose.ui.graphics.Color.White
+        rule.setContent {
+            androidx.compose.foundation.layout.Row(
+                androidx.compose.ui.Modifier.background(androidx.compose.ui.graphics.Color.Black)
+                    .fillMaxSize(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly,
+            ) {
+                for (deg in listOf(0f, 6f, 10f, 14f)) {
+                    androidx.compose.foundation.layout.Column(
+                        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                    ) {
+                        SegmentText("12:38", 260f, white, unlitAlpha = 0.08f, slantDegrees = deg)
+                        androidx.compose.material3.Text("${deg.toInt()}°", color = white,
+                            fontSize = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp))
+                    }
+                }
+            }
+        }
+        shot("slant_comparison")
     }
 
     @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")

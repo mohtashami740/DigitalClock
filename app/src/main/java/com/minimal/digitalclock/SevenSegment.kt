@@ -4,7 +4,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -31,6 +30,7 @@ private const val DIGIT_WIDTH = 0.50f    // digit width relative to digit height
 private const val THICKNESS = 0.085f     // segment thickness relative to digit height
 private const val SPACING = 0.16f        // gap between characters relative to digit height
 private const val COLON_WIDTH = 0.14f    // colon advance relative to digit height (plus spacing)
+const val DEFAULT_SLANT_DEGREES = 10f    // italic slant of the digits
 
 private val DIGIT_SEGMENTS = arrayOf(
     "abcdef", "bc", "abdeg", "abcdg", "bcfg", "acdfg", "acdefg", "abc", "abcdefg", "abcdfg",
@@ -42,11 +42,14 @@ private fun charWidth(c: Char, digitH: Float): Float = when (c) {
     else -> DIGIT_WIDTH * digitH
 }
 
-/** Width in pixels of [text] drawn at [fontPx]. */
-fun segmentTextWidth(text: String, fontPx: Float): Float {
+private fun slantFactor(degrees: Float) = kotlin.math.tan(Math.toRadians(degrees.toDouble())).toFloat()
+
+/** Width in pixels of [text] drawn at [fontPx] with [slantDegrees] italic slant. */
+fun segmentTextWidth(text: String, fontPx: Float, slantDegrees: Float = DEFAULT_SLANT_DEGREES): Float {
     if (text.isEmpty()) return 0f
     val d = fontPx * DIGIT_HEIGHT
-    return text.sumOf { charWidth(it, d).toDouble() }.toFloat() + SPACING * d * (text.length - 1)
+    return text.sumOf { charWidth(it, d).toDouble() }.toFloat() + SPACING * d * (text.length - 1) +
+        d * slantFactor(slantDegrees) // the top of the last character leans out by this much
 }
 
 @Composable
@@ -56,10 +59,15 @@ fun SegmentText(
     color: Color,
     modifier: Modifier = Modifier,
     unlitAlpha: Float = 0f,
+    slantDegrees: Float = DEFAULT_SLANT_DEGREES,
 ) {
     val digitH = fontPx * DIGIT_HEIGHT
     val top = (fontPx - digitH) / 2f
-    val width = segmentTextWidth(text, fontPx)
+    val width = segmentTextWidth(text, fontPx, slantDegrees)
+    // Italic: shift every point right in proportion to its height above the digit baseline.
+    val k = slantFactor(slantDegrees)
+    val baseY = top + digitH
+    val skew = { p: Offset -> Offset(p.x + (baseY - p.y) * k, p.y) }
     Canvas(
         modifier
             .layout { measurable, _ ->
@@ -74,15 +82,17 @@ fun SegmentText(
         var x = 0f
         for (c in text) {
             when {
-                c.isDigit() -> drawDigit(c - '0', Offset(x, top), digitH, color, unlitAlpha)
-                c == ':' -> drawColon(Offset(x, top), digitH, color)
+                c.isDigit() -> drawDigit(c - '0', Offset(x, top), digitH, color, unlitAlpha, skew)
+                c == ':' -> drawColon(Offset(x, top), digitH, color, skew)
             }
             x += charWidth(c, digitH) + SPACING * digitH
         }
     }
 }
 
-private fun DrawScope.drawDigit(digit: Int, origin: Offset, h: Float, color: Color, unlitAlpha: Float) {
+private fun DrawScope.drawDigit(
+    digit: Int, origin: Offset, h: Float, color: Color, unlitAlpha: Float, skew: (Offset) -> Offset,
+) {
     val w = h * DIGIT_WIDTH
     val t = h * THICKNESS
     val gap = t * 0.18f
@@ -101,31 +111,37 @@ private fun DrawScope.drawDigit(digit: Int, origin: Offset, h: Float, color: Col
     for ((name, ends) in segments) {
         val on = name in lit
         if (!on && unlitAlpha <= 0f) continue
-        drawPath(segmentPath(ends.first, ends.second, t, gap), if (on) color else color.copy(alpha = color.alpha * unlitAlpha))
+        drawPath(segmentPath(ends.first, ends.second, t, gap, skew), if (on) color else color.copy(alpha = color.alpha * unlitAlpha))
     }
 }
 
 /** A hexagonal segment between two corner points (pointed ends, like a real LED/LCD segment). */
-private fun segmentPath(p0: Offset, p1: Offset, t: Float, gap: Float): Path {
+private fun segmentPath(p0: Offset, p1: Offset, t: Float, gap: Float, skew: (Offset) -> Offset): Path {
     val half = t / 2
-    return Path().apply {
-        if (p0.y == p1.y) { // horizontal
-            val x0 = p0.x + gap; val x1 = p1.x - gap; val y = p0.y
-            moveTo(x0, y); lineTo(x0 + half, y - half); lineTo(x1 - half, y - half)
-            lineTo(x1, y); lineTo(x1 - half, y + half); lineTo(x0 + half, y + half)
-        } else { // vertical
-            val y0 = p0.y + gap; val y1 = p1.y - gap; val x = p0.x
-            moveTo(x, y0); lineTo(x + half, y0 + half); lineTo(x + half, y1 - half)
-            lineTo(x, y1); lineTo(x - half, y1 - half); lineTo(x - half, y0 + half)
-        }
-        close()
+    val pts = if (p0.y == p1.y) { // horizontal
+        val x0 = p0.x + gap; val x1 = p1.x - gap; val y = p0.y
+        listOf(Offset(x0, y), Offset(x0 + half, y - half), Offset(x1 - half, y - half),
+            Offset(x1, y), Offset(x1 - half, y + half), Offset(x0 + half, y + half))
+    } else { // vertical
+        val y0 = p0.y + gap; val y1 = p1.y - gap; val x = p0.x
+        listOf(Offset(x, y0), Offset(x + half, y0 + half), Offset(x + half, y1 - half),
+            Offset(x, y1), Offset(x - half, y1 - half), Offset(x - half, y0 + half))
     }
+    return polygon(pts.map(skew))
 }
 
-private fun DrawScope.drawColon(origin: Offset, h: Float, color: Color) {
+private fun polygon(points: List<Offset>) = Path().apply {
+    moveTo(points[0].x, points[0].y)
+    for (p in points.drop(1)) lineTo(p.x, p.y)
+    close()
+}
+
+private fun DrawScope.drawColon(origin: Offset, h: Float, color: Color, skew: (Offset) -> Offset) {
     val t = h * THICKNESS * 1.1f
     val cx = origin.x + COLON_WIDTH * h / 2
     for (fy in floatArrayOf(0.30f, 0.70f)) {
-        drawRect(color, Offset(cx - t / 2, origin.y + h * fy - t / 2), Size(t, t))
+        val l = cx - t / 2; val r = cx + t / 2
+        val tp = origin.y + h * fy - t / 2; val b = tp + t
+        drawPath(polygon(listOf(Offset(l, tp), Offset(r, tp), Offset(r, b), Offset(l, b)).map(skew)), color)
     }
 }
