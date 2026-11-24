@@ -14,6 +14,10 @@ On the release page, tap the `.apk` file under **Assets**, open it on your phone
   <img src="screenshots/landscape_12h_amber.png" width="49%" alt="Landscape, 12-hour, amber">
 </p>
 <p>
+  <img src="screenshots/segment_landscape.png" width="74%" alt="7-segment style, landscape">
+  <img src="screenshots/segment_portrait.png" width="24%" alt="7-segment style, portrait">
+</p>
+<p>
   <img src="screenshots/portrait_long_zone.png" width="24%" alt="Portrait">
   <img src="screenshots/settings.png" width="24%" alt="Settings">
   <img src="screenshots/about.png" width="24%" alt="About">
@@ -21,6 +25,7 @@ On the release page, tap the `.apk` file under **Assets**, open it on your phone
 
 ## Features
 - Full-screen (immersive) display; the digits scale to fill the screen.
+- Two digit styles: modern thin font, or classic 7-segment (with optional faint unlit segments).
 - Portrait shows hours over minutes; landscape shows `HH:mm` on one line.
 - 12/24-hour format, optional seconds, date and time zone name.
 - Any time zone, independent of the phone's system zone.

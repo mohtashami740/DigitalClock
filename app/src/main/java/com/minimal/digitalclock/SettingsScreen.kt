@@ -122,6 +122,28 @@ private fun SettingsList(
 
         item { Preview(settings) }
 
+        item { Section("Style") }
+        item {
+            Column(Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
+                Text("Digits", style = MaterialTheme.typography.bodyLarge)
+                Spacer(Modifier.height(8.dp))
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    val options = listOf(ClockStyle.MODERN to "Modern", ClockStyle.SEGMENT to "7-segment")
+                    options.forEachIndexed { i, (style, label) ->
+                        SegmentedButton(
+                            selected = settings.clockStyle == style,
+                            onClick = { settings.clockStyle = style },
+                            shape = SegmentedButtonDefaults.itemShape(i, options.size),
+                        ) { Text(label) }
+                    }
+                }
+            }
+        }
+        if (settings.clockStyle == ClockStyle.SEGMENT) item {
+            SwitchRow("Show unlit segments", settings.showUnlitSegments,
+                "Faint outline of the unused segments, like a real LED display") { settings.showUnlitSegments = it }
+        }
+
         item { Section("Time") }
         item { SwitchRow("24-hour format", settings.use24Hour) { settings.use24Hour = it } }
         item { SwitchRow("Show seconds", settings.showSeconds) { settings.showSeconds = it } }
@@ -224,7 +246,11 @@ private fun Preview(settings: ClockSettings) {
     ) {
         val now = java.time.ZonedDateTime.now(settings.zoneId)
         val text = now.format(java.time.format.DateTimeFormatter.ofPattern(if (settings.use24Hour) "HH:mm" else "h:mm"))
-        Text(text, color = Color(settings.foreground), fontSize = 56.sp, fontWeight = FontWeight.Thin)
+        if (settings.clockStyle == ClockStyle.SEGMENT) {
+            val px = with(androidx.compose.ui.platform.LocalDensity.current) { 56.sp.toPx() }
+            SegmentText(text, px, Color(settings.foreground),
+                unlitAlpha = if (settings.showUnlitSegments) 0.08f else 0f)
+        } else Text(text, color = Color(settings.foreground), fontSize = 56.sp, fontWeight = FontWeight.Thin)
     }
 }
 

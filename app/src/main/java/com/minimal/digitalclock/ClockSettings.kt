@@ -10,6 +10,8 @@ import kotlin.reflect.KProperty
 
 enum class ClockOrientation { AUTO, PORTRAIT, LANDSCAPE }
 
+enum class ClockStyle { MODERN, SEGMENT }
+
 /** All user settings, persisted in SharedPreferences and observable by Compose. */
 class ClockSettings(context: Context) {
     private val prefs: SharedPreferences =
@@ -19,6 +21,10 @@ class ClockSettings(context: Context) {
     var showSeconds by pref("showSeconds", true)
     var showDate by pref("showDate", true)
     var showZoneName by pref("showZoneName", true)
+
+    var clockStyleOrdinal by pref("clockStyle", ClockStyle.MODERN.ordinal)
+    /** 7-segment style only: draw unlit segments faintly, like a real LED/LCD display. */
+    var showUnlitSegments by pref("unlitSegments", true)
 
     /** Empty string = follow the system time zone. */
     var zoneIdString by pref("zoneId", "")
@@ -37,6 +43,10 @@ class ClockSettings(context: Context) {
     var orientation: ClockOrientation
         get() = ClockOrientation.entries[orientationOrdinal.coerceIn(0, 2)]
         set(value) { orientationOrdinal = value.ordinal }
+
+    var clockStyle: ClockStyle
+        get() = ClockStyle.entries[clockStyleOrdinal.coerceIn(0, ClockStyle.entries.size - 1)]
+        set(value) { clockStyleOrdinal = value.ordinal }
 
     val zoneId: ZoneId
         get() = if (zoneIdString.isEmpty()) ZoneId.systemDefault()

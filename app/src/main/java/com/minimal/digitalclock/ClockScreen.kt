@@ -106,22 +106,28 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
 
         val showSide = !settings.use24Hour || settings.showSeconds
         val showFooter = settings.showDate || settings.showZoneName
+        val segments = settings.clockStyle == ClockStyle.SEGMENT
+        val unlitAlpha = if (settings.showUnlitSegments) 0.08f else 0f
 
         // Compute the biggest font size that fits, using a fixed "00" template so the size never
         // changes from one minute to the next. Text scales linearly, so measure once at 100sp.
         val measurer = rememberTextMeasurer()
-        val digitsSp: Float = remember(portrait, showSide, showFooter, settings.showDate, settings.showZoneName, availW, availH) {
+        val digitsSp: Float = remember(portrait, segments, showSide, showFooter, settings.showDate, settings.showZoneName, availW, availH) {
             val ref = 100.sp
-            val line = measurer.measure(if (portrait) "00" else "00:00", digitStyle(ref, fg)).size
+            val refPx = with(density) { ref.toPx() }
+            val template = if (portrait) "00" else "00:00"
+            val line = measurer.measure(template, digitStyle(ref, fg)).size
+            val lineW = if (segments) segmentTextWidth(template, refPx) else line.width.toFloat()
             val sideW = if (showSide) {
                 val s = digitStyle(ref * SIDE_RATIO, fg, FontWeight.Light)
-                maxOf(measurer.measure("00", s).size.width, measurer.measure("PM", s).size.width) +
-                    with(density) { 0.04f * ref.toPx() }
+                val secondsW = if (segments) segmentTextWidth("00", refPx * SIDE_RATIO)
+                else measurer.measure("00", s).size.width.toFloat()
+                maxOf(secondsW, measurer.measure("PM", s).size.width.toFloat()) + 0.04f * refPx
             } else 0f
             val footerH = if (showFooter)
                 measurer.measure("Ag", digitStyle(ref * DATE_RATIO, fg, FontWeight.Light)).size.height * (if (portrait && settings.showDate && settings.showZoneName) 2.8f else 1.8f)
             else 0f
-            val totalW = line.width + sideW.toFloat()
+            val totalW = lineW + sideW
             val totalH = line.height * (if (portrait) 2 else 1) + footerH
             100f * min(availW / totalW, availH / totalH)
         }
@@ -157,7 +163,9 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
 
             @Composable
             fun DigitsLine(digits: String, sideVisible: Boolean) = Row {
-                Text(digits, big, Modifier.alignBy(LastBaseline))
+                if (segments) SegmentText(
+                    digits, with(density) { digitSize.toPx() }, fg, Modifier.alignBy(LastBaseline), unlitAlpha,
+                ) else Text(digits, big, Modifier.alignBy(LastBaseline))
                 if (showSide) {
                     Spacer(Modifier.width(with(density) { (sideSize.toPx() * 0.15f).toDp() }))
                     // Invisible copy on the hours line keeps both portrait lines centred identically.
@@ -166,7 +174,12 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
                         verticalArrangement = Arrangement.Bottom,
                     ) {
                         if (!settings.use24Hour) Text(amPm, side)
-                        if (settings.showSeconds) Text(if (sideVisible) seconds else "00", side)
+                        if (settings.showSeconds) {
+                            val secs = if (sideVisible) seconds else "00"
+                            if (segments) SegmentText(
+                                secs, with(density) { sideSize.toPx() }, side.color, unlitAlpha = unlitAlpha,
+                            ) else Text(secs, side)
+                        }
                     }
                 }
             }

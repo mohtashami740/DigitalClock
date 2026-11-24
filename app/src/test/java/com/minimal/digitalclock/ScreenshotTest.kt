@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
+import androidx.compose.foundation.background
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,7 +25,7 @@ class ScreenshotTest {
             rule.mainClock.autoAdvance = false
             use24Hour = true; showSeconds = true; showDate = true; showZoneName = true
             zoneIdString = "Asia/Tokyo"; foreground = 0xFFFFFFFF.toInt(); background = 0xFF000000.toInt()
-            burnInProtection = false
+            burnInProtection = false; clockStyle = ClockStyle.MODERN; showUnlitSegments = true
             block()
         }
 
@@ -62,7 +63,39 @@ class ScreenshotTest {
     }
 
     @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
-    fun settingsScreen() { val s = settings(); rule.setContent { SettingsScreen(s) {} }; shot("settings") }
+    fun settingsScreen() { val s = settings { clockStyle = ClockStyle.SEGMENT }; rule.setContent { SettingsScreen(s) {} }; shot("settings") }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun segmentLandscape() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT; foreground = 0xFFFF8A65.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("segment_landscape")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun segmentLandscape12hNoGhost() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT; use24Hour = false; showUnlitSegments = false; foreground = 0xFF81C784.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("segment_landscape_12h")
+    }
+
+    @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun segmentPortrait() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT; foreground = 0xFFE57373.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("segment_portrait")
+    }
+
+    @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun segmentAllDigits() {
+        rule.mainClock.autoAdvance = false
+        rule.setContent {
+            androidx.compose.foundation.layout.Column(
+                androidx.compose.ui.Modifier.background(androidx.compose.ui.graphics.Color.Black)
+            ) {
+                SegmentText("01234", 300f, androidx.compose.ui.graphics.Color.White, unlitAlpha = 0.08f)
+                SegmentText("56789", 300f, androidx.compose.ui.graphics.Color.White, unlitAlpha = 0.08f)
+            }
+        }
+        shot("segment_digits")
+    }
 
     @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
     fun aboutScreen() {
