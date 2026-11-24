@@ -2,6 +2,13 @@
 
 A minimal, full-screen digital clock for Android (8.0+) that keeps the screen on.
 
+## Download
+
+**[⬇ Download the latest APK](https://github.com/mohtashami740/DigitalClock/releases/latest)** (Android 8.0 or newer)
+
+On the release page, tap the `.apk` file under **Assets**, open it on your phone and allow
+"Install unknown apps" when asked. New versions install over old ones and keep your settings.
+
 <p>
   <img src="screenshots/landscape_24h.png" width="49%" alt="Landscape, 24-hour">
   <img src="screenshots/landscape_12h_amber.png" width="49%" alt="Landscape, 12-hour, amber">
