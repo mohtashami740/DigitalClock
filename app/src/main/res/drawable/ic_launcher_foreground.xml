@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- left digit "1" -->
+    <path android:fillColor="#FFFFFF" android:pathData="M38,40h3v28h-3z"/>
+    <!-- colon -->
+    <path android:fillColor="#FFFFFF" android:pathData="M52.5,47.5a2,2 0 1,0 3,0a2,2 0 1,0 -3,0z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M52.5,60.5a2,2 0 1,0 3,0a2,2 0 1,0 -3,0z"/>
+    <!-- right digit "0" outline -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M64,40h12v28h-12zM67,43v22h6v-22z"/>
+</vector>
