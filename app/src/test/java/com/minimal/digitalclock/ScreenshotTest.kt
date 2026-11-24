@@ -63,4 +63,18 @@ class ScreenshotTest {
 
     @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
     fun settingsScreen() { val s = settings(); rule.setContent { SettingsScreen(s) {} }; shot("settings") }
+
+    @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun aboutScreen() {
+        rule.mainClock.autoAdvance = false
+        rule.setContent {
+            androidx.compose.material3.MaterialTheme(colorScheme = androidx.compose.material3.darkColorScheme()) {
+                androidx.compose.material3.Surface(
+                    color = androidx.compose.ui.graphics.Color(0xFF0E0E0E),
+                    contentColor = androidx.compose.ui.graphics.Color(0xFFE6E1E5),
+                ) { AboutScreen {} }
+            }
+        }
+        shot("about")
+    }
 }

@@ -9,6 +9,7 @@ A minimal, full-screen digital clock for Android (8.0+) that keeps the screen on
 <p>
   <img src="screenshots/portrait_long_zone.png" width="24%" alt="Portrait">
   <img src="screenshots/settings.png" width="24%" alt="Settings">
+  <img src="screenshots/about.png" width="24%" alt="About">
 </p>
 
 ## Features
@@ -21,7 +22,7 @@ A minimal, full-screen digital clock for Android (8.0+) that keeps the screen on
 - Optional "show over lock screen".
 - Orientation: auto / portrait / landscape.
 
-Tap the clock to show the settings button.
+Tap the clock to show the settings button. Settings → About shows the version, build time and a link to this repository.
 
 ## Build
 ```

@@ -75,6 +75,7 @@ private val BackgroundPresets = listOf(
 fun SettingsScreen(settings: ClockSettings, onClose: () -> Unit) {
     var pickingZone by rememberSaveable { mutableStateOf(false) }
     var customColorFor by rememberSaveable { mutableStateOf<String?>(null) } // "fg" | "bg"
+    var showingAbout by rememberSaveable { mutableStateOf(false) }
 
     MaterialTheme(colorScheme = darkColorScheme()) {
         Surface(Modifier.fillMaxSize(), color = Color(0xFF0E0E0E), contentColor = Color(0xFFE6E1E5)) {
@@ -86,9 +87,12 @@ fun SettingsScreen(settings: ClockSettings, onClose: () -> Unit) {
                     onPick = { settings.zoneIdString = it; pickingZone = false },
                     onBack = { pickingZone = false },
                 )
+            } else if (showingAbout) {
+                BackHandler { showingAbout = false }
+                AboutScreen(onBack = { showingAbout = false })
             } else {
                 SettingsList(settings, onClose, onPickZone = { pickingZone = true },
-                    onCustomColor = { customColorFor = it })
+                    onCustomColor = { customColorFor = it }, onAbout = { showingAbout = true })
             }
             customColorFor?.let { which ->
                 ColorDialog(
@@ -111,6 +115,7 @@ private fun SettingsList(
     onClose: () -> Unit,
     onPickZone: () -> Unit,
     onCustomColor: (String) -> Unit,
+    onAbout: () -> Unit,
 ) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 32.dp)) {
         item { TopBar("Settings", onClose) }
@@ -188,11 +193,21 @@ private fun SettingsList(
             SwitchRow("Show over lock screen", settings.showWhenLocked,
                 "Clock stays visible after the phone locks") { settings.showWhenLocked = it }
         }
+
+        item { Section("About") }
+        item {
+            Row(Modifier.fillMaxWidth().clickable(onClick = onAbout).padding(horizontal = 24.dp, vertical = 14.dp)) {
+                Column {
+                    Text("About", style = MaterialTheme.typography.bodyLarge)
+                    Text("Version ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun TopBar(title: String, onBack: () -> Unit) {
+internal fun TopBar(title: String, onBack: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
         Text(title, style = MaterialTheme.typography.titleLarge)

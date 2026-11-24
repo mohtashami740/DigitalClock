@@ -14,8 +14,12 @@ android {
         applicationId = "com.minimal.digitalclock"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // Bump both for every release: versionCode must always increase.
+        versionCode = 2
+        versionName = "1.1.0"
+
+        buildConfigField("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
+        buildConfigField("String", "GITHUB_URL", "\"https://github.com/mohtashami740/DigitalClock\"")
     }
 
     // Signing details live in keystore/keystore.properties, which is not in the repository:
@@ -48,7 +52,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     testOptions { unitTests.isIncludeAndroidResources = true }
 }
 
