@@ -49,6 +49,8 @@ class ClockSettings(context: Context) {
     var keepScreenOn by pref("keepScreenOn", true)
     /** With [keepScreenOn]: only keep the screen on while the phone is plugged in. */
     var keepOnOnlyWhileCharging by pref("keepOnOnlyWhileCharging", false)
+    /** With [keepOnOnlyWhileCharging]: on battery, show a black, dimmed screen (tap shows the clock briefly). */
+    var blackOnBattery by pref("blackOnBattery", false)
     var showBattery by pref("showBattery", false)
 
     /** Negative = use system brightness; otherwise 0.01..1. */

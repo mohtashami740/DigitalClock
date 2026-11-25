@@ -128,3 +128,40 @@ fun setScreenSaverEnabled(context: Context, enabled: Boolean) {
         PackageManager.DONT_KILL_APP,
     )
 }
+
+// ---- Black screen on battery ---------------------------------------------------------------
+
+/** How long the clock stays visible on battery after a tap or after opening the app. */
+const val BLACKOUT_REVEAL_MS = 10_000L
+
+/**
+ * Rules for "Black screen on battery":
+ * - pulling the cable while the clock is showing makes the screen black at once;
+ * - plugging it in shows the clock again;
+ * - opening the app or touching the screen on battery shows the clock for [BLACKOUT_REVEAL_MS],
+ *   then it goes black again ([expire] is called by a timer).
+ */
+class Blackout {
+    /** Last known power state; null until the battery reports it. */
+    var plugged by mutableStateOf<Boolean?>(null)
+        private set
+    /** Whether the clock is temporarily shown while on battery. */
+    var revealed by mutableStateOf(true)
+        private set
+    /** Changes on every reveal, so the timer restarts. */
+    var revealCount by mutableStateOf(0)
+        private set
+
+    fun onPower(nowPlugged: Boolean?) {
+        if (nowPlugged == null) return
+        if (plugged == true && !nowPlugged) revealed = false   // cable pulled: black right away
+        if (nowPlugged) revealed = true                        // on power: always show the clock
+        plugged = nowPlugged
+    }
+
+    fun reveal() { revealed = true; revealCount++ }
+
+    fun expire() { revealed = false }
+
+    fun isBlack(enabled: Boolean): Boolean = enabled && plugged == false && !revealed
+}

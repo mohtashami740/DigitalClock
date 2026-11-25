@@ -251,6 +251,11 @@ private fun SettingsList(
             SwitchRow("Only while charging", settings.keepOnOnlyWhileCharging,
                 "On battery, the screen turns off normally to save power") { settings.keepOnOnlyWhileCharging = it }
         }
+        if (settings.keepScreenOn && settings.keepOnOnlyWhileCharging) item {
+            SwitchRow("Black screen on battery", settings.blackOnBattery,
+                "When unplugged, the screen goes black and dim right away. Tap to see the time for 10 seconds; " +
+                    "plugging in shows the clock again") { settings.blackOnBattery = it }
+        }
         item {
             SwitchRow("Custom brightness", settings.brightness >= 0f,
                 "Override system brightness — dim it for night use") {

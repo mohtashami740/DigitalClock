@@ -45,4 +45,45 @@ class BatteryFeaturesTest {
         assertFalse(s.keepOnOnlyWhileCharging)
         assertEquals(true, s.keepScreenOn)
     }
+
+    @Test
+    fun blackoutRules() {
+        val b = Blackout()
+        // Feature off: never black.
+        b.onPower(false); b.expire()
+        assertFalse(b.isBlack(enabled = false))
+
+        val x = Blackout()
+        // Battery state not known yet: never black.
+        assertFalse(x.isBlack(true))
+        // App opened on battery: the clock shows first...
+        x.onPower(false)
+        assertFalse(x.isBlack(true))
+        // ...and goes black when the 10 seconds run out.
+        x.expire()
+        assertTrue(x.isBlack(true))
+        // A tap shows it again.
+        x.reveal()
+        assertFalse(x.isBlack(true))
+        // Plugging in shows the clock, and it stays (no timer while charging).
+        x.onPower(true)
+        assertFalse(x.isBlack(true))
+        x.expire()
+        assertFalse(x.isBlack(true))
+        // Pulling the cable makes it black at once.
+        x.onPower(true)
+        x.onPower(false)
+        assertTrue(x.isBlack(true))
+        // Repeated battery updates while unplugged don't change anything.
+        x.onPower(false)
+        assertTrue(x.isBlack(true))
+        // Unknown state reports are ignored.
+        x.onPower(null)
+        assertTrue(x.isBlack(true))
+    }
+
+    @Test
+    fun blackScreenDefaultOff() {
+        assertFalse(ClockSettings(ApplicationProvider.getApplicationContext()).blackOnBattery)
+    }
 }

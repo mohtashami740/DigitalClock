@@ -29,7 +29,7 @@ class ScreenshotTest {
             zoneIdString = "Asia/Tokyo"; foreground = 0xFFFFFFFF.toInt(); background = 0xFF000000.toInt()
             burnInProtection = false; clockStyle = ClockStyle.MODERN; showUnlitSegments = true
             visualEffect = VisualEffect.NONE; effectAmount = 0.5f; glassTint = GlassTint.BRONZE
-            showBattery = false; keepOnOnlyWhileCharging = false
+            showBattery = false; keepOnOnlyWhileCharging = false; blackOnBattery = false
             block()
         }
 
@@ -369,6 +369,16 @@ class ScreenshotTest {
         rule.onAllNodes(androidx.compose.ui.test.hasScrollToNodeAction())[0]
             .performScrollToNode(androidx.compose.ui.test.hasText("Show battery level"))
         shot("settings_battery")
+    }
+
+    @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun settingsBlackOnBattery() {
+        val s = settings { keepOnOnlyWhileCharging = true; blackOnBattery = true }
+        rule.setContent { SettingsScreen(s) {} }
+        rule.mainClock.autoAdvance = true
+        rule.onAllNodes(androidx.compose.ui.test.hasScrollToNodeAction())[0]
+            .performScrollToNode(androidx.compose.ui.test.hasText("Black screen on battery"))
+        shot("settings_black_on_battery")
     }
 
     @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
