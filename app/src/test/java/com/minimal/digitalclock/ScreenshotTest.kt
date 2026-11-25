@@ -302,6 +302,33 @@ class ScreenshotTest {
         shot("effect_settings_slider")
     }
 
+    /** Draws the real adaptive launcher icon (all layers) as a phone would, with a circular mask. */
+    @Test @Config(qualifiers = "w411dp-h891dp-xxxhdpi")
+    fun launcherIcon() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val icon = androidx.core.content.ContextCompat.getDrawable(ctx, R.mipmap.ic_launcher)
+            as android.graphics.drawable.AdaptiveIconDrawable
+        val size = 432 // 108 dp at xxxhdpi; launchers show the central 72 dp
+        val full = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val c = Canvas(full)
+        listOf(icon.background, icon.foreground).forEach { it.setBounds(0, 0, size, size); it.draw(c) }
+        val crop = Bitmap.createBitmap(full, size / 6, size / 6, size * 2 / 3, size * 2 / 3)
+        val out = Bitmap.createBitmap(crop.width, crop.height, Bitmap.Config.ARGB_8888)
+        val oc = Canvas(out)
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+        oc.drawCircle(out.width / 2f, out.height / 2f, out.width / 2f, paint)
+        paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN)
+        oc.drawBitmap(crop, 0f, 0f, paint)
+        File("build/screens").mkdirs()
+        File("build/screens/launcher_icon.png").outputStream().use { out.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        val mono = icon.monochrome!!
+        val m = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        Canvas(m).apply { drawColor(0xFF2B3A55.toInt()); mono.setBounds(0, 0, size, size); mono.setTint(0xFFCFE0FF.toInt()); mono.draw(this) }
+        File("build/screens/launcher_icon_themed.png").outputStream().use {
+            Bitmap.createBitmap(m, size / 6, size / 6, size * 2 / 3, size * 2 / 3).compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+    }
+
     @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
     fun aboutScreen() {
         rule.mainClock.autoAdvance = false

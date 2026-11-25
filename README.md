@@ -1,3 +1,5 @@
+<img src="screenshots/icon.png" width="96" alt="App icon" align="right">
+
 # Digital Clock
 
 A minimal, full-screen digital clock for Android (8.0+) that keeps the screen on.
