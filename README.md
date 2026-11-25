@@ -37,6 +37,7 @@ On the release page, tap the `.apk` file under **Assets**, open it on your phone
 - Any time zone, independent of the phone's system zone.
 - Digit and background colors: presets, a custom color picker, and a swap button.
 - Keep screen on, custom brightness (dim for night), burn-in protection (slow drift).
+- Optional: keep the screen on only while charging, a battery level indicator, and use as Android screen saver (shows the clock while charging or docked).
 - Optional "show over lock screen".
 - Orientation: auto / portrait / landscape.
 
