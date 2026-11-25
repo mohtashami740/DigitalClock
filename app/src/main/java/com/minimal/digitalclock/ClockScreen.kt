@@ -108,6 +108,7 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
         val showFooter = settings.showDate || settings.showZoneName
         val segments = settings.clockStyle == ClockStyle.SEGMENT
         val unlitAlpha = if (settings.showUnlitSegments) 0.08f else 0f
+        val effect = settings.visualEffect
 
         // Compute the biggest font size that fits, using a fixed "00" template so the size never
         // changes from one minute to the next. Text scales linearly, so measure once at 100sp.
@@ -161,11 +162,30 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
             val big = digitStyle(digitSize, fg)
             val side = digitStyle(sideSize, fg.copy(alpha = 0.75f), FontWeight.Light)
 
+            // Glow/blur size for an element: relative to its own size, but small text (seconds, date)
+            // is treated as at least this big so fog blurs everything about equally.
+            val blurRefFloor = with(density) { digitSize.toPx() } * 0.35f
+            fun blurRef(fontPx: Float) = maxOf(fontPx, blurRefFloor)
+
+            @Composable
+            fun Digits(text: String, fontPx: Float, style: TextStyle, modifier: Modifier = Modifier) =
+                EffectLayers(effect, modifier) { glow, a ->
+                    if (segments) SegmentText(
+                        text, fontPx, style.color.copy(alpha = style.color.alpha * a),
+                        unlitAlpha = if (glow == null) unlitAlpha else 0f,
+                        blurPx = glow?.let { it.relRadius * blurRef(fontPx) } ?: 0f,
+                    ) else Text(text, style.forLayer(glow, a, blurRef(fontPx)))
+                }
+
+            @Composable
+            fun EffectText(text: String, style: TextStyle) {
+                val px = with(density) { style.fontSize.toPx() }
+                EffectLayers(effect) { glow, a -> Text(text, style.forLayer(glow, a, blurRef(px))) }
+            }
+
             @Composable
             fun DigitsLine(digits: String, sideVisible: Boolean) = Row {
-                if (segments) SegmentText(
-                    digits, with(density) { digitSize.toPx() }, fg, Modifier.alignBy(LastBaseline), unlitAlpha,
-                ) else Text(digits, big, Modifier.alignBy(LastBaseline))
+                Digits(digits, with(density) { digitSize.toPx() }, big, Modifier.alignBy(LastBaseline))
                 if (showSide) {
                     Spacer(Modifier.width(with(density) { (sideSize.toPx() * 0.15f).toDp() }))
                     // Invisible copy on the hours line keeps both portrait lines centred identically.
@@ -173,12 +193,10 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
                         Modifier.alignBy(LastBaseline).alpha(if (sideVisible) 1f else 0f),
                         verticalArrangement = Arrangement.Bottom,
                     ) {
-                        if (!settings.use24Hour) Text(amPm, side)
+                        if (!settings.use24Hour) EffectText(amPm, side)
                         if (settings.showSeconds) {
                             val secs = if (sideVisible) seconds else "00"
-                            if (segments) SegmentText(
-                                secs, with(density) { sideSize.toPx() }, side.color, unlitAlpha = unlitAlpha,
-                            ) else Text(secs, side)
+                            Digits(secs, with(density) { sideSize.toPx() }, side)
                         }
                     }
                 }
@@ -204,13 +222,16 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
                 val footerStyle = digitStyle(dateSize, fg.copy(alpha = 0.6f), FontWeight.Light).copy(letterSpacing = 0.08.em)
                 val footerW = measurer.measure(footer, footerStyle).size.width
                 val shrink = if (footerW > availW) availW / footerW else 1f
-                androidx.compose.material3.Text(
-                    footer,
-                    style = footerStyle.copy(fontSize = dateSize * shrink),
-                    modifier = Modifier.padding(top = with(density) { (dateSize.toPx() * 0.6f).toDp() }),
-                )
+                val footerFinal = footerStyle.copy(fontSize = dateSize * shrink)
+                val footerPx = with(density) { footerFinal.fontSize.toPx() }
+                EffectLayers(effect, Modifier.padding(top = with(density) { (dateSize.toPx() * 0.6f).toDp() })) { glow, a ->
+                    androidx.compose.material3.Text(footer, style = footerFinal.forLayer(glow, a, blurRef(footerPx)))
+                }
             }
         }
+
+        // The glass in front of the clock (fog / dirt). It drifts the opposite way to the clock.
+        GlassOverlay(effect, Modifier.fillMaxSize(), shift = { IntOffset(-drift.x / 2, -drift.y / 2) })
 
         AnimatedVisibility(
             visible = controlsVisible,

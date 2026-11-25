@@ -6,7 +6,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.layout.layout
@@ -60,6 +64,8 @@ fun SegmentText(
     modifier: Modifier = Modifier,
     unlitAlpha: Float = 0f,
     slantDegrees: Float = DEFAULT_SLANT_DEGREES,
+    /** > 0: draw only a blurred copy of the lit segments (used for glow/halo layers). */
+    blurPx: Float = 0f,
 ) {
     val digitH = fontPx * DIGIT_HEIGHT
     val top = (fontPx - digitH) / 2f
@@ -82,8 +88,9 @@ fun SegmentText(
         var x = 0f
         for (c in text) {
             when {
-                c.isDigit() -> drawDigit(c - '0', Offset(x, top), digitH, color, unlitAlpha, skew)
-                c == ':' -> drawColon(Offset(x, top), digitH, color, skew)
+                c.isDigit() -> drawDigit(c - '0', Offset(x, top), digitH, color,
+                    if (blurPx > 0f) 0f else unlitAlpha, skew, blurPx)
+                c == ':' -> drawColon(Offset(x, top), digitH, color, skew, blurPx)
             }
             x += charWidth(c, digitH) + SPACING * digitH
         }
@@ -92,6 +99,7 @@ fun SegmentText(
 
 private fun DrawScope.drawDigit(
     digit: Int, origin: Offset, h: Float, color: Color, unlitAlpha: Float, skew: (Offset) -> Offset,
+    blurPx: Float,
 ) {
     val w = h * DIGIT_WIDTH
     val t = h * THICKNESS
@@ -111,7 +119,8 @@ private fun DrawScope.drawDigit(
     for ((name, ends) in segments) {
         val on = name in lit
         if (!on && unlitAlpha <= 0f) continue
-        drawPath(segmentPath(ends.first, ends.second, t, gap, skew), if (on) color else color.copy(alpha = color.alpha * unlitAlpha))
+        fill(segmentPath(ends.first, ends.second, t, gap, skew),
+            if (on) color else color.copy(alpha = color.alpha * unlitAlpha), if (on) blurPx else 0f)
     }
 }
 
@@ -136,12 +145,27 @@ private fun polygon(points: List<Offset>) = Path().apply {
     close()
 }
 
-private fun DrawScope.drawColon(origin: Offset, h: Float, color: Color, skew: (Offset) -> Offset) {
+private fun DrawScope.drawColon(origin: Offset, h: Float, color: Color, skew: (Offset) -> Offset, blurPx: Float) {
     val t = h * THICKNESS * 1.1f
     val cx = origin.x + COLON_WIDTH * h / 2
     for (fy in floatArrayOf(0.30f, 0.70f)) {
         val l = cx - t / 2; val r = cx + t / 2
         val tp = origin.y + h * fy - t / 2; val b = tp + t
-        drawPath(polygon(listOf(Offset(l, tp), Offset(r, tp), Offset(r, b), Offset(l, b)).map(skew)), color)
+        fill(polygon(listOf(Offset(l, tp), Offset(r, tp), Offset(r, b), Offset(l, b)).map(skew)), color, blurPx)
+    }
+}
+
+/** Fills [path]; with [blurPx] > 0 draws a soft, blurred version instead (for glow layers). */
+private fun DrawScope.fill(path: Path, color: Color, blurPx: Float) {
+    if (blurPx <= 0f) {
+        drawPath(path, color)
+        return
+    }
+    drawIntoCanvas { canvas ->
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            this.color = color.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurPx, android.graphics.BlurMaskFilter.Blur.NORMAL)
+        }
+        canvas.nativeCanvas.drawPath(path.asAndroidPath(), paint)
     }
 }

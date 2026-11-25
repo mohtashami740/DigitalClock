@@ -27,6 +27,7 @@ class ScreenshotTest {
             use24Hour = true; showSeconds = true; showDate = true; showZoneName = true
             zoneIdString = "Asia/Tokyo"; foreground = 0xFFFFFFFF.toInt(); background = 0xFF000000.toInt()
             burnInProtection = false; clockStyle = ClockStyle.MODERN; showUnlitSegments = true
+            visualEffect = VisualEffect.NONE
             block()
         }
 
@@ -120,6 +121,66 @@ class ScreenshotTest {
             }
         }
         shot("slant_comparison")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectHaloModern() {
+        val s = settings { visualEffect = VisualEffect.HALO; foreground = 0xFF64B5F6.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_halo_modern")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectHaloSegment() {
+        val s = settings { visualEffect = VisualEffect.HALO; clockStyle = ClockStyle.SEGMENT; foreground = 0xFFFF8A65.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_halo_segment")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectDiffusionModern() {
+        val s = settings { visualEffect = VisualEffect.DIFFUSION; foreground = 0xFF64B5F6.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_diffusion_modern")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectDiffusionSegment() {
+        val s = settings { visualEffect = VisualEffect.DIFFUSION; clockStyle = ClockStyle.SEGMENT; foreground = 0xFFFF8A65.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_diffusion_segment")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectFogModern() {
+        val s = settings { visualEffect = VisualEffect.FOG; foreground = 0xFF64B5F6.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_fog_modern")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectFogSegment() {
+        val s = settings { visualEffect = VisualEffect.FOG; clockStyle = ClockStyle.SEGMENT; foreground = 0xFFFF8A65.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_fog_segment")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectDirtyModern() {
+        val s = settings { visualEffect = VisualEffect.DIRTY; foreground = 0xFF64B5F6.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_dirty_modern")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectDirtySegment() {
+        val s = settings { visualEffect = VisualEffect.DIRTY; clockStyle = ClockStyle.SEGMENT; foreground = 0xFFFF8A65.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_dirty_segment")
+    }
+
+    @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun effectFogPortrait() {
+        val s = settings { visualEffect = VisualEffect.FOG; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_fog_portrait")
+    }
+
+    @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun effectSettings() {
+        val s = settings { visualEffect = VisualEffect.HALO; clockStyle = ClockStyle.SEGMENT }
+        rule.setContent { SettingsScreen(s) {} }; shot("effect_settings")
     }
 
     @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")

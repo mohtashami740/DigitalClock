@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -136,6 +137,24 @@ private fun SettingsList(
                             shape = SegmentedButtonDefaults.itemShape(i, options.size),
                         ) { Text(label) }
                     }
+                }
+            }
+        }
+        item {
+            Text("Effect", style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 4.dp))
+        }
+        items(VisualEffect.entries.size) { i ->
+            val e = VisualEffect.entries[i]
+            Row(
+                Modifier.fillMaxWidth().clickable { settings.visualEffect = e }
+                    .padding(horizontal = 12.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RadioButton(selected = settings.visualEffect == e, onClick = { settings.visualEffect = e })
+                Column {
+                    Text(e.label, style = MaterialTheme.typography.bodyLarge)
+                    Text(e.description, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 }
             }
         }
@@ -246,11 +265,17 @@ private fun Preview(settings: ClockSettings) {
     ) {
         val now = java.time.ZonedDateTime.now(settings.zoneId)
         val text = now.format(java.time.format.DateTimeFormatter.ofPattern(if (settings.use24Hour) "HH:mm" else "h:mm"))
-        if (settings.clockStyle == ClockStyle.SEGMENT) {
-            val px = with(androidx.compose.ui.platform.LocalDensity.current) { 56.sp.toPx() }
-            SegmentText(text, px, Color(settings.foreground),
-                unlitAlpha = if (settings.showUnlitSegments) 0.08f else 0f)
-        } else Text(text, color = Color(settings.foreground), fontSize = 56.sp, fontWeight = FontWeight.Thin)
+        val fg = Color(settings.foreground)
+        val px = with(androidx.compose.ui.platform.LocalDensity.current) { 56.sp.toPx() }
+        val style = androidx.compose.ui.text.TextStyle(color = fg, fontSize = 56.sp, fontWeight = FontWeight.Thin)
+        EffectLayers(settings.visualEffect) { glow, a ->
+            if (settings.clockStyle == ClockStyle.SEGMENT) SegmentText(
+                text, px, fg.copy(alpha = fg.alpha * a),
+                unlitAlpha = if (glow == null && settings.showUnlitSegments) 0.08f else 0f,
+                blurPx = glow?.let { it.relRadius * px } ?: 0f,
+            ) else Text(text, style = style.forLayer(glow, a, px))
+        }
+        GlassOverlay(settings.visualEffect, Modifier.matchParentSize())
     }
 }
 

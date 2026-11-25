@@ -26,6 +26,11 @@ class ClockSettings(context: Context) {
     /** 7-segment style only: draw unlit segments faintly, like a real LED/LCD display. */
     var showUnlitSegments by pref("unlitSegments", true)
 
+    var visualEffectOrdinal by pref("visualEffect", VisualEffect.NONE.ordinal)
+    var visualEffect: VisualEffect
+        get() = VisualEffect.entries[visualEffectOrdinal.coerceIn(0, VisualEffect.entries.size - 1)]
+        set(value) { visualEffectOrdinal = value.ordinal }
+
     /** Empty string = follow the system time zone. */
     var zoneIdString by pref("zoneId", "")
 
