@@ -169,7 +169,7 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
 
             @Composable
             fun Digits(text: String, fontPx: Float, style: TextStyle, modifier: Modifier = Modifier) =
-                EffectLayers(effect, modifier) { glow, a ->
+                EffectLayers(effect, settings.effectAmount, modifier) { glow, a ->
                     if (segments) SegmentText(
                         text, fontPx, style.color.copy(alpha = style.color.alpha * a),
                         unlitAlpha = if (glow == null) unlitAlpha else 0f,
@@ -180,7 +180,7 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
             @Composable
             fun EffectText(text: String, style: TextStyle) {
                 val px = with(density) { style.fontSize.toPx() }
-                EffectLayers(effect) { glow, a -> Text(text, style.forLayer(glow, a, blurRef(px))) }
+                EffectLayers(effect, settings.effectAmount) { glow, a -> Text(text, style.forLayer(glow, a, blurRef(px))) }
             }
 
             @Composable
@@ -224,14 +224,19 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
                 val shrink = if (footerW > availW) availW / footerW else 1f
                 val footerFinal = footerStyle.copy(fontSize = dateSize * shrink)
                 val footerPx = with(density) { footerFinal.fontSize.toPx() }
-                EffectLayers(effect, Modifier.padding(top = with(density) { (dateSize.toPx() * 0.6f).toDp() })) { glow, a ->
+                EffectLayers(effect, settings.effectAmount, Modifier.padding(top = with(density) { (dateSize.toPx() * 0.6f).toDp() })) { glow, a ->
                     androidx.compose.material3.Text(footer, style = footerFinal.forLayer(glow, a, blurRef(footerPx)))
                 }
             }
         }
 
         // The glass in front of the clock (fog / dirt). It drifts the opposite way to the clock.
-        GlassOverlay(effect, Modifier.fillMaxSize(), shift = { IntOffset(-drift.x / 2, -drift.y / 2) })
+        GlassOverlay(
+            effect, Modifier.fillMaxSize(),
+            amount = { settings.effectAmount },
+            tint = { Color(settings.glassTint.argb) },
+            shift = { IntOffset(-drift.x / 2, -drift.y / 2) },
+        )
 
         AnimatedVisibility(
             visible = controlsVisible,

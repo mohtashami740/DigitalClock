@@ -31,6 +31,14 @@ class ClockSettings(context: Context) {
         get() = VisualEffect.entries[visualEffectOrdinal.coerceIn(0, VisualEffect.entries.size - 1)]
         set(value) { visualEffectOrdinal = value.ordinal }
 
+    /** Strength of the visual effect: 0 = subtle, 1 = strong. */
+    var effectAmount by pref("effectAmount", 0.5f)
+
+    var glassTintOrdinal by pref("glassTint", GlassTint.BRONZE.ordinal)
+    var glassTint: GlassTint
+        get() = GlassTint.entries[glassTintOrdinal.coerceIn(0, GlassTint.entries.size - 1)]
+        set(value) { glassTintOrdinal = value.ordinal }
+
     /** Empty string = follow the system time zone. */
     var zoneIdString by pref("zoneId", "")
 

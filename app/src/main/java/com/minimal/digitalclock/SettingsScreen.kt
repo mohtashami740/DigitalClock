@@ -59,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.time.Instant
+import kotlin.math.roundToInt
 import java.time.ZoneId
 import java.time.ZoneOffset
 
@@ -118,10 +119,12 @@ private fun SettingsList(
     onCustomColor: (String) -> Unit,
     onAbout: () -> Unit,
 ) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 32.dp)) {
-        item { TopBar("Settings", onClose) }
-
-        item { Preview(settings) }
+    // Title and preview stay pinned while the settings scroll, so changes are always visible.
+    Column(Modifier.fillMaxSize()) {
+    TopBar("Settings", onClose)
+    Preview(settings)
+    HorizontalDivider(Modifier.padding(top = 8.dp), color = Color.White.copy(alpha = 0.08f))
+    LazyColumn(Modifier.fillMaxWidth().weight(1f), contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 32.dp)) {
 
         item { Section("Style") }
         item {
@@ -155,6 +158,34 @@ private fun SettingsList(
                 Column {
                     Text(e.label, style = MaterialTheme.typography.bodyLarge)
                     Text(e.description, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
+            }
+        }
+        if (settings.visualEffect == VisualEffect.TINTED) item {
+            Column(Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
+                Text("Tint", style = MaterialTheme.typography.bodyLarge)
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    GlassTint.entries.forEach { t ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Swatch(Color(t.argb), settings.glassTint == t) { settings.glassTint = t }
+                            Text(t.label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        }
+                    }
+                }
+            }
+        }
+        if (settings.visualEffect != VisualEffect.NONE) item {
+            Column(Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Amount", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Text("${(settings.effectAmount * 100).roundToInt()}%",
+                        style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                }
+                Slider(value = settings.effectAmount, onValueChange = { settings.effectAmount = it })
+                Row {
+                    Text("Subtle", style = MaterialTheme.typography.labelSmall, color = Color.Gray, modifier = Modifier.weight(1f))
+                    Text("Strong", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 }
             }
         }
@@ -245,6 +276,7 @@ private fun SettingsList(
             }
         }
     }
+    }
 }
 
 @Composable
@@ -268,14 +300,18 @@ private fun Preview(settings: ClockSettings) {
         val fg = Color(settings.foreground)
         val px = with(androidx.compose.ui.platform.LocalDensity.current) { 56.sp.toPx() }
         val style = androidx.compose.ui.text.TextStyle(color = fg, fontSize = 56.sp, fontWeight = FontWeight.Thin)
-        EffectLayers(settings.visualEffect) { glow, a ->
+        EffectLayers(settings.visualEffect, settings.effectAmount) { glow, a ->
             if (settings.clockStyle == ClockStyle.SEGMENT) SegmentText(
                 text, px, fg.copy(alpha = fg.alpha * a),
                 unlitAlpha = if (glow == null && settings.showUnlitSegments) 0.08f else 0f,
                 blurPx = glow?.let { it.relRadius * px } ?: 0f,
             ) else Text(text, style = style.forLayer(glow, a, px))
         }
-        GlassOverlay(settings.visualEffect, Modifier.matchParentSize())
+        GlassOverlay(
+            settings.visualEffect, Modifier.matchParentSize(),
+            amount = { settings.effectAmount },
+            tint = { Color(settings.glassTint.argb) },
+        )
     }
 }
 

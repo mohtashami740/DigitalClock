@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.compose.foundation.background
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.foundation.layout.fillMaxSize
 import org.junit.Rule
 import org.junit.Test
@@ -27,7 +28,7 @@ class ScreenshotTest {
             use24Hour = true; showSeconds = true; showDate = true; showZoneName = true
             zoneIdString = "Asia/Tokyo"; foreground = 0xFFFFFFFF.toInt(); background = 0xFF000000.toInt()
             burnInProtection = false; clockStyle = ClockStyle.MODERN; showUnlitSegments = true
-            visualEffect = VisualEffect.NONE
+            visualEffect = VisualEffect.NONE; effectAmount = 0.5f; glassTint = GlassTint.BRONZE
             block()
         }
 
@@ -181,6 +182,123 @@ class ScreenshotTest {
     fun effectSettings() {
         val s = settings { visualEffect = VisualEffect.HALO; clockStyle = ClockStyle.SEGMENT }
         rule.setContent { SettingsScreen(s) {} }; shot("effect_settings")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectCrackedModern() {
+        val s = settings { visualEffect = VisualEffect.CRACKED; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_cracked_modern")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectCrackedSegment() {
+        val s = settings { visualEffect = VisualEffect.CRACKED; clockStyle = ClockStyle.SEGMENT; foreground = 0xFFFF8A65.toInt(); glassTint = GlassTint.BLUE }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_cracked_segment")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectTintedModern() {
+        val s = settings { visualEffect = VisualEffect.TINTED; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_tinted_modern")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectTintedSegment() {
+        val s = settings { visualEffect = VisualEffect.TINTED; clockStyle = ClockStyle.SEGMENT; foreground = 0xFFFF8A65.toInt(); glassTint = GlassTint.BLUE }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_tinted_segment")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectReflectiveModern() {
+        val s = settings { visualEffect = VisualEffect.REFLECTIVE; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_reflective_modern")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun effectReflectiveSegment() {
+        val s = settings { visualEffect = VisualEffect.REFLECTIVE; clockStyle = ClockStyle.SEGMENT; foreground = 0xFFFF8A65.toInt(); glassTint = GlassTint.BLUE }
+        rule.setContent { ClockScreen(s) {} }; shot("effect_reflective_segment")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountHalo0() {
+        val s = settings { visualEffect = VisualEffect.HALO; effectAmount = 0.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_halo_0")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountHalo100() {
+        val s = settings { visualEffect = VisualEffect.HALO; effectAmount = 1.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_halo_100")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountFog0() {
+        val s = settings { visualEffect = VisualEffect.FOG; effectAmount = 0.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_fog_0")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountFog100() {
+        val s = settings { visualEffect = VisualEffect.FOG; effectAmount = 1.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_fog_100")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountDirty0() {
+        val s = settings { visualEffect = VisualEffect.DIRTY; effectAmount = 0.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_dirty_0")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountDirty100() {
+        val s = settings { visualEffect = VisualEffect.DIRTY; effectAmount = 1.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_dirty_100")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountCracked0() {
+        val s = settings { visualEffect = VisualEffect.CRACKED; effectAmount = 0.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_cracked_0")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountCracked100() {
+        val s = settings { visualEffect = VisualEffect.CRACKED; effectAmount = 1.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_cracked_100")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountTinted0() {
+        val s = settings { visualEffect = VisualEffect.TINTED; effectAmount = 0.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_tinted_0")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountTinted100() {
+        val s = settings { visualEffect = VisualEffect.TINTED; effectAmount = 1.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_tinted_100")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountReflective0() {
+        val s = settings { visualEffect = VisualEffect.REFLECTIVE; effectAmount = 0.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_reflective_0")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun amountReflective100() {
+        val s = settings { visualEffect = VisualEffect.REFLECTIVE; effectAmount = 1.0f; foreground = 0xFFFFFFFF.toInt() }
+        rule.setContent { ClockScreen(s) {} }; shot("amount_reflective_100")
+    }
+
+    @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun effectSettingsSlider() {
+        val s = settings { visualEffect = VisualEffect.TINTED; glassTint = GlassTint.BLUE; effectAmount = 0.7f }
+        rule.setContent { SettingsScreen(s) {} }
+        rule.onNode(androidx.compose.ui.test.hasScrollToNodeAction())
+            .performScrollToNode(androidx.compose.ui.test.hasText("Strong"))
+        shot("effect_settings_slider")
     }
 
     @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
