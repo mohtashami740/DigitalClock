@@ -47,6 +47,9 @@ class ClockSettings(context: Context) {
 
     var orientationOrdinal by pref("orientation", ClockOrientation.AUTO.ordinal)
     var keepScreenOn by pref("keepScreenOn", true)
+    /** With [keepScreenOn]: only keep the screen on while the phone is plugged in. */
+    var keepOnOnlyWhileCharging by pref("keepOnOnlyWhileCharging", false)
+    var showBattery by pref("showBattery", false)
 
     /** Negative = use system brightness; otherwise 0.01..1. */
     var brightness by pref("brightness", -1f)

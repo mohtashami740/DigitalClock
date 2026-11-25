@@ -32,8 +32,10 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             // Apply window-level settings whenever they change.
-            LaunchedEffect(settings.keepScreenOn) {
-                if (settings.keepScreenOn) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            val battery = rememberBatteryState()
+            val keepOn = shouldKeepScreenOn(settings.keepScreenOn, settings.keepOnOnlyWhileCharging, battery)
+            LaunchedEffect(keepOn) {
+                if (keepOn) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
             LaunchedEffect(settings.brightness) {
@@ -61,7 +63,7 @@ class MainActivity : ComponentActivity() {
                 label = "screen"
             ) { showSettings ->
                 if (showSettings) SettingsScreen(settings, onClose = { inSettings = false })
-                else ClockScreen(settings, onOpenSettings = { inSettings = true })
+                else ClockScreen(settings, onOpenSettings = { inSettings = true }, battery = battery)
             }
         }
     }

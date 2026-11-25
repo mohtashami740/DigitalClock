@@ -200,6 +200,10 @@ private fun SettingsList(
         item { SwitchRow("Show date", settings.showDate) { settings.showDate = it } }
         item { SwitchRow("Show time zone name", settings.showZoneName) { settings.showZoneName = it } }
         item {
+            SwitchRow("Show battery level", settings.showBattery,
+                "Battery icon and percentage next to the date") { settings.showBattery = it }
+        }
+        item {
             val label = if (settings.zoneIdString.isEmpty())
                 "System default (${ZoneId.systemDefault().id})" else settings.zoneIdString
             Row(Modifier.fillMaxWidth().clickable(onClick = onPickZone).padding(horizontal = 24.dp, vertical = 14.dp)) {
@@ -243,6 +247,10 @@ private fun SettingsList(
             SwitchRow("Keep screen on", settings.keepScreenOn,
                 "Screen never turns off while the clock is open") { settings.keepScreenOn = it }
         }
+        if (settings.keepScreenOn) item {
+            SwitchRow("Only while charging", settings.keepOnOnlyWhileCharging,
+                "On battery, the screen turns off normally to save power") { settings.keepOnOnlyWhileCharging = it }
+        }
         item {
             SwitchRow("Custom brightness", settings.brightness >= 0f,
                 "Override system brightness — dim it for night use") {
@@ -266,6 +274,9 @@ private fun SettingsList(
                 "Clock stays visible after the phone locks") { settings.showWhenLocked = it }
         }
 
+        item { Section("Screen saver") }
+        item { ScreenSaverRows() }
+
         item { Section("About") }
         item {
             Row(Modifier.fillMaxWidth().clickable(onClick = onAbout).padding(horizontal = 24.dp, vertical = 14.dp)) {
@@ -276,6 +287,36 @@ private fun SettingsList(
             }
         }
     }
+    }
+}
+
+/** Offers the clock as Android's screen saver, and opens Android's settings to choose it. */
+@Composable
+private fun ScreenSaverRows() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var enabled by remember { mutableStateOf(isScreenSaverEnabled(context)) }
+    SwitchRow("Use as screen saver", enabled,
+        "Show this clock automatically while the phone is charging or docked") {
+        setScreenSaverEnabled(context, it); enabled = it
+    }
+    if (enabled) {
+        Column(Modifier.padding(horizontal = 24.dp, vertical = 4.dp)) {
+            Text(
+                "To start it, choose \"Clock\" as the screen saver in Android's settings and set when it starts " +
+                    "(for example, while charging).",
+                style = MaterialTheme.typography.bodySmall, color = Color.Gray,
+            )
+            TextButton(
+                onClick = {
+                    try {
+                        context.startActivity(android.content.Intent(android.provider.Settings.ACTION_DREAM_SETTINGS))
+                    } catch (_: android.content.ActivityNotFoundException) {
+                        context.startActivity(android.content.Intent(android.provider.Settings.ACTION_DISPLAY_SETTINGS))
+                    }
+                },
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+            ) { Text("Open Android screen saver settings") }
+        }
     }
 }
 

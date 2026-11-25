@@ -35,7 +35,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -55,6 +60,7 @@ import kotlin.random.Random
 
 private const val SIDE_RATIO = 0.26f   // AM/PM + seconds size relative to the digits
 private const val DATE_RATIO = 0.11f   // date line size relative to the digits
+private const val FOOTER_LINE_HEIGHT = 1.35f // line spacing of the footer (portrait shows one item per line)
 private const val FILL = 0.90f         // fraction of the screen the clock may occupy
 
 private fun digitStyle(size: TextUnit, color: Color, weight: FontWeight = FontWeight.Thin) = TextStyle(
@@ -69,7 +75,12 @@ private fun digitStyle(size: TextUnit, color: Color, weight: FontWeight = FontWe
 )
 
 @Composable
-fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
+fun ClockScreen(
+    settings: ClockSettings,
+    /** Null hides the settings button (used by the screen saver). */
+    onOpenSettings: (() -> Unit)?,
+    battery: BatteryState? = rememberBatteryState(),
+) {
     val fg = Color(settings.foreground)
     val bg = Color(settings.background)
     val zone = settings.zoneId
@@ -105,7 +116,11 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
         val availH = with(density) { maxHeight.toPx() } * FILL
 
         val showSide = !settings.use24Hour || settings.showSeconds
-        val showFooter = settings.showDate || settings.showZoneName
+        val batteryInfo = if (settings.showBattery) battery else null
+        val showFooter = settings.showDate || settings.showZoneName || batteryInfo != null
+        // Portrait puts each footer item on its own line.
+        val footerLines = if (!portrait) 1 else
+            listOf(settings.showDate, settings.showZoneName, batteryInfo != null).count { it }
         val segments = settings.clockStyle == ClockStyle.SEGMENT
         val unlitAlpha = if (settings.showUnlitSegments) 0.08f else 0f
         val effect = settings.visualEffect
@@ -113,7 +128,7 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
         // Compute the biggest font size that fits, using a fixed "00" template so the size never
         // changes from one minute to the next. Text scales linearly, so measure once at 100sp.
         val measurer = rememberTextMeasurer()
-        val digitsSp: Float = remember(portrait, segments, showSide, showFooter, settings.showDate, settings.showZoneName, availW, availH) {
+        val digitsSp: Float = remember(portrait, segments, showSide, showFooter, footerLines, availW, availH) {
             val ref = 100.sp
             val refPx = with(density) { ref.toPx() }
             val template = if (portrait) "00" else "00:00"
@@ -126,7 +141,7 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
                 maxOf(secondsW, measurer.measure("PM", s).size.width.toFloat()) + 0.04f * refPx
             } else 0f
             val footerH = if (showFooter)
-                measurer.measure("Ag", digitStyle(ref * DATE_RATIO, fg, FontWeight.Light)).size.height * (if (portrait && settings.showDate && settings.showZoneName) 2.8f else 1.8f)
+                measurer.measure("Ag", digitStyle(ref * DATE_RATIO, fg, FontWeight.Light)).size.height * (0.8f + FOOTER_LINE_HEIGHT * footerLines)
             else 0f
             val totalW = lineW + sideW
             val totalH = line.height * (if (portrait) 2 else 1) + footerH
@@ -218,14 +233,34 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
                     if (settings.showZoneName) add(zoneLabel(zone.id))
                 }
                 // Portrait: one item per line. Either way, shrink the text if it would be wider than the screen.
-                val footer = parts.joinToString(if (portrait) "\n" else "  ·  ")
-                val footerStyle = digitStyle(dateSize, fg.copy(alpha = 0.6f), FontWeight.Light).copy(letterSpacing = 0.08.em)
-                val footerW = measurer.measure(footer, footerStyle).size.width
+                val sep = if (portrait) "\n" else "  ·  "
+                val footer = buildAnnotatedString {
+                    parts.forEachIndexed { i, p -> if (i > 0) append(sep); append(p) }
+                    if (batteryInfo != null) {
+                        if (parts.isNotEmpty()) append(sep)
+                        appendInlineContent("battery", "[battery]")
+                        append(" ${batteryInfo.level}%")
+                    }
+                }
+                val footerStyle = digitStyle(dateSize, fg.copy(alpha = 0.6f), FontWeight.Light)
+                    .copy(letterSpacing = 0.08.em, lineHeight = FOOTER_LINE_HEIGHT.em)
+                // For measuring, two block characters stand in for the battery icon.
+                val footerW = measurer.measure(footer.text.replace("[battery]", "\u2588\u2588"), footerStyle).size.width
                 val shrink = if (footerW > availW) availW / footerW else 1f
                 val footerFinal = footerStyle.copy(fontSize = dateSize * shrink)
                 val footerPx = with(density) { footerFinal.fontSize.toPx() }
                 EffectLayers(effect, settings.effectAmount, Modifier.padding(top = with(density) { (dateSize.toPx() * 0.6f).toDp() })) { glow, a ->
-                    androidx.compose.material3.Text(footer, style = footerFinal.forLayer(glow, a, blurRef(footerPx)))
+                    val inline = if (batteryInfo == null) emptyMap() else mapOf(
+                        "battery" to InlineTextContent(Placeholder(1.6.em, 0.78.em, PlaceholderVerticalAlign.TextCenter)) {
+                            BatteryGlyph(
+                                batteryInfo, footerFinal.color.copy(alpha = footerFinal.color.alpha * a), Modifier.fillMaxSize(),
+                                blurPx = glow?.let { it.relRadius * blurRef(footerPx) } ?: 0f,
+                            )
+                        }
+                    )
+                    androidx.compose.material3.Text(
+                        footer, style = footerFinal.forLayer(glow, a, blurRef(footerPx)), inlineContent = inline,
+                    )
                 }
             }
         }
@@ -238,7 +273,7 @@ fun ClockScreen(settings: ClockSettings, onOpenSettings: () -> Unit) {
             shift = { IntOffset(-drift.x / 2, -drift.y / 2) },
         )
 
-        AnimatedVisibility(
+        if (onOpenSettings != null) AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn(), exit = fadeOut(),
             modifier = Modifier.align(Alignment.TopEnd).padding(24.dp),
