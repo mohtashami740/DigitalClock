@@ -296,6 +296,7 @@ class ScreenshotTest {
     fun effectSettingsSlider() {
         val s = settings { visualEffect = VisualEffect.TINTED; glassTint = GlassTint.BLUE; effectAmount = 0.7f }
         rule.setContent { SettingsScreen(s) {} }
+        rule.mainClock.autoAdvance = true // settings have no endless animation, so scrolling can settle
         rule.onNode(androidx.compose.ui.test.hasScrollToNodeAction())
             .performScrollToNode(androidx.compose.ui.test.hasText("Strong"))
         shot("effect_settings_slider")
