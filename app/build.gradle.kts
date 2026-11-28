@@ -15,8 +15,8 @@ android {
         minSdk = 26
         targetSdk = 35
         // Bump both for every release: versionCode must always increase.
-        versionCode = 5
-        versionName = "1.4.0"
+        versionCode = 6
+        versionName = "1.5.0"
 
         buildConfigField("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
         buildConfigField("String", "GITHUB_URL", "\"https://github.com/mohtashami740/DigitalClock\"")

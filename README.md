@@ -25,12 +25,15 @@ On the release page, tap the `.apk` file under **Assets**, open it on your phone
   <img src="screenshots/about.png" width="24%" alt="About">
 </p>
 
+### Digit styles
+<img src="screenshots/digit_styles.png" width="100%" alt="Digit styles: modern, 7-segment thin, 7-segment thick, 7-segment LED">
+
 ### Visual effects
 <img src="screenshots/effects.png" width="100%" alt="Visual effects: none, halo, diffusion, foggy glass, dirty glass, cracked glass, tinted glass, reflective glass">
 
 ## Features
 - Full-screen (immersive) display; the digits scale to fill the screen.
-- Two digit styles: modern thin font, or classic italic 7-segment (with optional faint unlit segments).
+- Four digit styles: modern thin font, or italic 7-segment in thin, thick or glowing LED style (with optional faint unlit segments).
 - Visual effects: halo, diffusion, foggy glass, dirty glass, cracked glass, tinted glass and reflective glass, with an adjustable amount and a live preview in Settings.
 - Portrait shows hours over minutes; landscape shows `HH:mm` on one line.
 - 12/24-hour format, optional seconds, date and time zone name.
