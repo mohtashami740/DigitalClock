@@ -128,20 +128,26 @@ private fun SettingsList(
 
         item { Section("Style") }
         item {
-            Column(Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-                Text("Digits", style = MaterialTheme.typography.bodyLarge)
-                Spacer(Modifier.height(8.dp))
-                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                    val options = listOf(ClockStyle.MODERN to "Modern", ClockStyle.SEGMENT to "7-segment")
-                    options.forEachIndexed { i, (style, label) ->
-                        SegmentedButton(
-                            selected = settings.clockStyle == style,
-                            onClick = { settings.clockStyle = style },
-                            shape = SegmentedButtonDefaults.itemShape(i, options.size),
-                        ) { Text(label) }
-                    }
+            Text("Digits", style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 4.dp))
+        }
+        items(ClockStyle.entries.size) { i ->
+            val st = ClockStyle.entries[i]
+            Row(
+                Modifier.fillMaxWidth().clickable { settings.clockStyle = st }
+                    .padding(horizontal = 12.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RadioButton(selected = settings.clockStyle == st, onClick = { settings.clockStyle = st })
+                Column {
+                    Text(st.label, style = MaterialTheme.typography.bodyLarge)
+                    Text(st.description, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 }
             }
+        }
+        if (settings.clockStyle.isSegment) item {
+            SwitchRow("Show unlit segments", settings.showUnlitSegments,
+                "Faint outline of the unused segments, like a real LED display") { settings.showUnlitSegments = it }
         }
         item {
             Text("Effect", style = MaterialTheme.typography.bodyLarge,
@@ -188,10 +194,6 @@ private fun SettingsList(
                     Text("Strong", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 }
             }
-        }
-        if (settings.clockStyle == ClockStyle.SEGMENT) item {
-            SwitchRow("Show unlit segments", settings.showUnlitSegments,
-                "Faint outline of the unused segments, like a real LED display") { settings.showUnlitSegments = it }
         }
 
         item { Section("Time") }
@@ -347,10 +349,11 @@ private fun Preview(settings: ClockSettings) {
         val px = with(androidx.compose.ui.platform.LocalDensity.current) { 56.sp.toPx() }
         val style = androidx.compose.ui.text.TextStyle(color = fg, fontSize = 56.sp, fontWeight = FontWeight.Thin)
         EffectLayers(settings.visualEffect, settings.effectAmount) { glow, a ->
-            if (settings.clockStyle == ClockStyle.SEGMENT) SegmentText(
+            if (settings.clockStyle.isSegment) SegmentText(
                 text, px, fg.copy(alpha = fg.alpha * a),
                 unlitAlpha = if (glow == null && settings.showUnlitSegments) 0.08f else 0f,
                 blurPx = glow?.let { it.relRadius * px } ?: 0f,
+                look = settings.clockStyle.segmentLook ?: SegmentLook.THIN,
             ) else Text(text, style = style.forLayer(glow, a, px))
         }
         GlassOverlay(

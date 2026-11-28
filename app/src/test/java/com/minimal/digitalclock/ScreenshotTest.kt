@@ -381,6 +381,64 @@ class ScreenshotTest {
         shot("settings_black_on_battery")
     }
 
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun styleModern() {
+        val s = settings { clockStyle = ClockStyle.MODERN; foreground = 0xFF46CDFF.toInt() }
+        rule.setContent { ClockScreen(s, {}) }; shot("style_modern")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun styleSegment() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT; foreground = 0xFF46CDFF.toInt() }
+        rule.setContent { ClockScreen(s, {}) }; shot("style_segment")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun styleSegmentThick() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT_THICK; foreground = 0xFF46CDFF.toInt() }
+        rule.setContent { ClockScreen(s, {}) }; shot("style_segment_thick")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun styleSegmentLed() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT_LED; foreground = 0xFF46CDFF.toInt() }
+        rule.setContent { ClockScreen(s, {}) }; shot("style_segment_led")
+    }
+
+    @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun ledPortrait() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT_LED; foreground = 0xFF46CDFF.toInt() }
+        rule.setContent { ClockScreen(s, {}) }; shot("led_portrait")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun ledHalo() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT_LED; visualEffect = VisualEffect.HALO; foreground = 0xFF46CDFF.toInt() }
+        rule.setContent { ClockScreen(s, {}) }; shot("led_halo")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun ledFog() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT_LED; visualEffect = VisualEffect.FOG; foreground = 0xFF46CDFF.toInt() }
+        rule.setContent { ClockScreen(s, {}) }; shot("led_fog")
+    }
+
+    @Test @Config(qualifiers = "w891dp-h411dp-xxhdpi")
+    fun ledOrangeNoGhost() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT_LED; showUnlitSegments = false; use24Hour = false; foreground = 0xFFFF8A65.toInt() }
+        rule.setContent { ClockScreen(s, {}) }; shot("led_orange_12h")
+    }
+
+    @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun settingsDigitStyles() {
+        val s = settings { clockStyle = ClockStyle.SEGMENT_LED; foreground = 0xFF46CDFF.toInt() }
+        rule.setContent { SettingsScreen(s) {} }
+        rule.mainClock.autoAdvance = true
+        rule.onAllNodes(androidx.compose.ui.test.hasScrollToNodeAction())[0]
+            .performScrollToNode(androidx.compose.ui.test.hasText("Show unlit segments"))
+        shot("settings_digit_styles")
+    }
+
     @Test @Config(qualifiers = "w411dp-h891dp-xxhdpi")
     fun aboutScreen() {
         rule.mainClock.autoAdvance = false

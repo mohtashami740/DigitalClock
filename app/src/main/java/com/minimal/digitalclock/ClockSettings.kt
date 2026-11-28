@@ -10,7 +10,15 @@ import kotlin.reflect.KProperty
 
 enum class ClockOrientation { AUTO, PORTRAIT, LANDSCAPE }
 
-enum class ClockStyle { MODERN, SEGMENT }
+/** Digit styles. The order is stored in settings: only add new styles at the end. */
+enum class ClockStyle(val label: String, val description: String, val segmentLook: SegmentLook?) {
+    MODERN("Modern", "Thin, elegant font", null),
+    SEGMENT("7-segment thin", "Classic digital clock digits", SegmentLook.THIN),
+    SEGMENT_THICK("7-segment thick", "Bold segments, easy to read from a distance", SegmentLook.THICK),
+    SEGMENT_LED("7-segment LED", "Glowing segments, like a real LED display", SegmentLook.LED);
+
+    val isSegment get() = segmentLook != null
+}
 
 /** All user settings, persisted in SharedPreferences and observable by Compose. */
 class ClockSettings(context: Context) {

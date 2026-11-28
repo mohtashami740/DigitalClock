@@ -121,7 +121,8 @@ fun ClockScreen(
         // Portrait puts each footer item on its own line.
         val footerLines = if (!portrait) 1 else
             listOf(settings.showDate, settings.showZoneName, batteryInfo != null).count { it }
-        val segments = settings.clockStyle == ClockStyle.SEGMENT
+        val segments = settings.clockStyle.isSegment
+        val look = settings.clockStyle.segmentLook ?: SegmentLook.THIN
         val unlitAlpha = if (settings.showUnlitSegments) 0.08f else 0f
         val effect = settings.visualEffect
 
@@ -189,6 +190,7 @@ fun ClockScreen(
                         text, fontPx, style.color.copy(alpha = style.color.alpha * a),
                         unlitAlpha = if (glow == null) unlitAlpha else 0f,
                         blurPx = glow?.let { it.relRadius * blurRef(fontPx) } ?: 0f,
+                        look = look,
                     ) else Text(text, style.forLayer(glow, a, blurRef(fontPx)))
                 }
 
